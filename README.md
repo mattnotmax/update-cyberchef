@@ -1,2 +1,5 @@
-# cyberchef-misc
-Collection of CyberChef notes and scripts
+# Contents
+
+## CyberChef Update Script
+
+PowerShell script to update to the latest version of CyberChef.  
