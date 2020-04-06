@@ -14,7 +14,7 @@
   ./Update-CyberChef.ps1 or in a Scheduled Task
 #>
 
-# Only run script if running as admin
+# Only run script if running as admin, this is required to make the shortcut so could be removed if that part not needed
 $CheckAdmin = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 if (-Not $CheckAdmin.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){
     Write-Host "Requires Administrator."
@@ -46,9 +46,16 @@ Remove-Item -Path $Install_Location -Force -Recurse
 New-Item -ItemType Directory $Install_Location | Out-Null
 Expand-Archive -Path "$Download_Location\$Download_File" -DestinationPath $Install_Location
 
+# Rename .html to generic to keep other links
+$CyberChef = Get-ChildItem "$Install_Location\*.html" | Select-Object -ExpandProperty Name
+Rename-Item $Install_Location$CyberChef "CyberChef.html"
+
 # Create Shortcut on Desktop
 $CyberChef = Get-ChildItem "$Install_Location\*.html" | Select-Object -ExpandProperty Name
 $Shell = New-Object -ComObject ("WScript.Shell")
 $ShortCut = $Shell.CreateShortcut($ShortcutLocation)
 $ShortCut.TargetPath = "$Install_Location\$CyberChef"
 $ShortCut.Save()
+
+# Remove ZIP file
+Remove-Item -Path $Download_Location$Download_File -Force -Recurse
