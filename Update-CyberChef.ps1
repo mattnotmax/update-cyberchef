@@ -16,10 +16,9 @@
 #>
 
 # Establish variables. Change for own location
-$Download_Location = "C:\Tools\"
+$Download_Location = "C:\Tools"
 $Download_File = "CyberChef_latest.zip"
-$Install_Location = "C:\Tools\CyberChef\"
-$CyberChef_Github = "https://api.github.com/repos/gchq/CyberChef/releases/latest"
+$Install_Location = "C:\Tools\CyberChef"
 $ShortcutLocation = "$env:USERPROFILE\Desktop\CyberChef.lnk"
 
 # Only run script if running as admin, this is required to make the shortcut so could be removed if that part not needed
@@ -38,11 +37,11 @@ else {
 }
 
 # Get Version from Github API and compare
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 
-$ZIP_File = (Invoke-WebRequest $CyberChef_Github | ConvertFrom-Json | ForEach-Object {$_.assets} | Select-Object -ExpandProperty browser_download_url | Select-String "\.zip" | Out-String)
-$Github_Version = ($ZIP_File -split "(?<=_)(.*?)(?=\.zip)")[1]
-if ($Installed_Version -eq $Github_Version) {
-  Write-Host "CyberChef is current"
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$Release =  Invoke-WebRequest "https://api.github.com/repos/gchq/CyberChef/releases/latest"
+$Release = $Release | ConvertFrom-Json | Select-Object -ExpandProperty tag_name 
+if ($Installed_Version -eq $Release) {
+  Write-Host "CyberChef is current."
   Exit
 }
 
@@ -51,13 +50,13 @@ if (Test-Path -Path "C:\tools\CyberChef_latest.zip") {
 }
 
 # Download ZIP from Github & Install
-Invoke-WebRequest $ZIP_File -OutFile "$Download_Location\$Download_File"
+Invoke-WebRequest "https://github.com/gchq/CyberChef/releases/download/$Release/CyberChef_$Release.zip" -OutFile "$Download_Location\$Download_File"
 Get-ChildItem -Path $Install_Location -Exclude "$Install_Location\version.txt" | ForEach-Object { Remove-Item $_ -Recurse }
 Expand-Archive -Path "$Download_Location\$Download_File" -DestinationPath $Install_Location
 $CyberChef = Get-ChildItem "$Install_Location\*.html" | Select-Object -ExpandProperty Name
-Rename-Item $Install_Location$CyberChef "CyberChef.html"
+Rename-Item $Install_Location\$CyberChef "CyberChef.html"
 $Github_Version | Out-File -FilePath "$Install_Location\version.txt"
-Remove-Item -Path $Download_Location$Download_File -Force -Recurse
+Remove-Item -Path $Download_Location\$Download_File -Force -Recurse
 
 # Install Shortcut if necessary
 if (Test-Path -Path $ShortcutLocation) {
@@ -65,8 +64,8 @@ if (Test-Path -Path $ShortcutLocation) {
 }
 else {
   $CyberChef = Get-ChildItem "$Install_Location\*.html" | Select-Object -ExpandProperty Name
-  $Shell = New-Object -ComObject ("WScript.Shell")
-  $ShortCut = $Shell.CreateShortcut($ShortcutLocation)
+  # $Shell = New-Object -ComObject ("WScript.Shell")
+  $ShortCut = (New-Object -ComObject ("WScript.Shell")).CreateShortcut($ShortcutLocation)
   $ShortCut.TargetPath = "$Install_Location\$CyberChef"
   $ShortCut.Save()
 }
