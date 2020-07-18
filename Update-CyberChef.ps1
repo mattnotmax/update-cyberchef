@@ -8,7 +8,7 @@
 
 .NOTES
   Release Date: 2019-11-21
-  Last Update: 2020-07-13
+  Last Update: 2020-07-18
   Author: @mattnotmax
 
 .EXAMPLE
@@ -27,9 +27,18 @@ if (-Not $CheckAdmin.IsInRole([Security.Principal.WindowsBuiltInRole]::Administr
   Write-Host "Requires Administrator."
 	Exit
 }
+if (-not (Test-Path -Path $Download_Location)) {
+  Write-Host "[+] Creating Download folder: $Download_Location" -ForegroundColor Yellow
+  New-Item -ItemType Directory $Download_Location | Out-Null
+}
+if (-not (Test-Path -Path $Install_Location)) {
+  Write-Host "[+] Creating Instllation folder: $Download_Location" -ForegroundColor Yellow
+  New-Item -ItemType Directory $Install_Location  | Out-Null
+}
 
 # Check if version.txt is present and read contents
 if (Test-Path -Path "$Install_Location\version.txt") {
+  Write-Host "[+] Reading currently installed version." -ForegroundColor Yellow
   $Installed_Version = Get-Content "$Install_Location\version.txt"
 }
 else {
@@ -41,31 +50,36 @@ else {
 $Release =  Invoke-WebRequest "https://api.github.com/repos/gchq/CyberChef/releases/latest"
 $Release = $Release | ConvertFrom-Json | Select-Object -ExpandProperty tag_name 
 if ($Installed_Version -eq $Release) {
-  Write-Host "CyberChef is current."
+  Write-Host "[+] CyberChef is current at $Release." -ForegroundColor Yellow
   Exit
 }
 
 if (Test-Path -Path "C:\tools\CyberChef_latest.zip") {
-    Remove-Item C:\Tools\CyberChef_latest.zip -Force
+  Write-Host "[+] Removing old installation ZIP file." -ForegroundColor Yellow  
+  Remove-Item C:\Tools\CyberChef_latest.zip -Force
 }
 
 # Download ZIP from Github & Install
+Write-Host "[+] Downloading CyberChef from Github." -ForegroundColor Yellow
 Invoke-WebRequest "https://github.com/gchq/CyberChef/releases/download/$Release/CyberChef_$Release.zip" -OutFile "$Download_Location\$Download_File"
 Get-ChildItem -Path $Install_Location -Exclude "$Install_Location\version.txt" | ForEach-Object { Remove-Item $_ -Recurse }
+Write-Host "[+] Expanding ZIP to $Install_Location." -ForegroundColor Yellow
 Expand-Archive -Path "$Download_Location\$Download_File" -DestinationPath $Install_Location
+Write-Host "[+] Cleaning up." -ForegroundColor Yellow
 $CyberChef = Get-ChildItem "$Install_Location\*.html" | Select-Object -ExpandProperty Name
 Rename-Item $Install_Location\$CyberChef "CyberChef.html"
-$Github_Version | Out-File -FilePath "$Install_Location\version.txt"
+$Release | Out-File -FilePath "$Install_Location\version.txt"
 Remove-Item -Path $Download_Location\$Download_File -Force -Recurse
 
 # Install Shortcut if necessary
 if (Test-Path -Path $ShortcutLocation) {
-  Write-Host "Skipping Shortcut. Already Exists"
+  Write-Host "[+] Skipping shortcut creation. Already exists." -ForegroundColor Yellow
 }
 else {
+  Write-Host "[+] Creating shortcut $ShortcutLocation." -ForegroundColor Yellow
   $CyberChef = Get-ChildItem "$Install_Location\*.html" | Select-Object -ExpandProperty Name
-  # $Shell = New-Object -ComObject ("WScript.Shell")
   $ShortCut = (New-Object -ComObject ("WScript.Shell")).CreateShortcut($ShortcutLocation)
   $ShortCut.TargetPath = "$Install_Location\$CyberChef"
   $ShortCut.Save()
 }
+Write-Host "[+] Installation Complete." -ForegroundColor Yellow
