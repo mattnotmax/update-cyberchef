@@ -18,4 +18,10 @@ Bash script to update to the latest version of CyberChef.
 
 *Usage:* `dfir@DFIR:~$ ./update-CyberChef.sh`
 
+*Requirements:* unzip and curl:  
+- `sudo apt install unzip`  
+- `sudo apt install curl`  
+
 Currently has hardcoded saving location `'/home/<user>/bin/CyberChef'`. Change as you see fit.  
+
+No desktop shortcut created.  
