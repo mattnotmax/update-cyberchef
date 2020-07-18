@@ -32,7 +32,7 @@ if (-not (Test-Path -Path $Download_Location)) {
   New-Item -ItemType Directory $Download_Location | Out-Null
 }
 if (-not (Test-Path -Path $Install_Location)) {
-  Write-Host "[+] Creating Instllation folder: $Download_Location" -ForegroundColor Yellow
+  Write-Host "[+] Creating Installation folder: $Install_Location" -ForegroundColor Yellow
   New-Item -ItemType Directory $Install_Location  | Out-Null
 }
 
