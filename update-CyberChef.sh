@@ -26,5 +26,6 @@ echo "[+] Extracting ZIP to $INSTALL_LOC"
 unzip -q $INSTALL_LOC/CyberChef_$RELEASE.zip -d $INSTALL_LOC
 echo "[+] Cleaning up..."
 rm $INSTALL_LOC/CyberChef_$RELEASE.zip
+mv /home/$(whoami)/bin/CyberChef/CyberChef_* /home/$(whoami)/bin/CyberChef/CyberChef.html
 echo $RELEASE > $INSTALL_LOC/version.txt
 echo "[+] Complete."
